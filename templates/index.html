@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Student Advising System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-title {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .predict-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .predict-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .result-placeholder {
+            text-align: center;
+            color: #666;
+        }
+
+        .result-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .result-content {
+            text-align: center;
+            display: none;
+        }
+
+        .result-action {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 15px 30px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .action-mandatory { background: #ffebee; color: #c62828; }
+        .action-recommend { background: #fff3e0; color: #ef6c00; }
+        .action-monitor { background: #e8f5e8; color: #2e7d32; }
+        .action-wellness { background: #f3e5f5; color: #7b1fa2; }
+        .action-check { background: #e3f2fd; color: #1565c0; }
+        .action-no { background: #e8f5e8; color: #2e7d32; }
+
+        .result-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            transition: width 0.5s ease;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+        }
+
+        .feature-card i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-graduation-cap"></i> Smart Student Advising System</h1>
+            <p>AI-Powered Academic Guidance & Support Recommendations</p>
+        </div>
+
+        <div class="info-card">
+            <h3><i class="fas fa-info-circle"></i> About This System</h3>
+            <p>Our intelligent advising system analyzes student data using machine learning to recommend appropriate academic interventions and support actions.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <i class="fas fa-brain"></i>
+                    <h4>AI-Powered</h4>
+                    <p>Uses Reinforcement Learning</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h4>Data-Driven</h4>
+                    <p>Analyzes 11 key metrics</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-users"></i>
+                    <h4>Personalized</h4>
+                    <p>Tailored recommendations</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-clock"></i>
+                    <h4>Real-Time</h4>
+                    <p>Instant predictions</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="form-container">
+                <h2 class="form-title">
+                    <i class="fas fa-user-graduate"></i>
+                    Student Information
+                </h2>
+
+                <form id="studentForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="student_id"><i class="fas fa-id-badge"></i> Student ID</label>
+                            <input type="number" id="student_id" name="student_id" required min="1000" max="9999">
+                        </div>
+                        <div class="form-group">
+                            <label for="age"><i class="fas fa-calendar"></i> Age</label>
+                            <input type="number" id="age" name="age" required min="17" max="30">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="major"><i class="fas fa-book"></i> Major</label>
+                            <select id="major" name="major" required>
+                                <option value="">Select Major</option>
+                                <option value="Biology">Biology</option>
+                                <option value="CompSci">Computer Science</option>
+                                <option value="English">English</option>
+                                <option value="History">History</option>
+                                <option value="Physics">Physics</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="previous_gpa"><i class="fas fa-star"></i> Previous GPA</label>
+                            <input type="number" id="previous_gpa" name="previous_gpa" step="0.01" min="0" max="4" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="scholarship"><i class="fas fa-award"></i> Scholarship</label>
+                            <select id="scholarship" name="scholarship" required>
+                                <option value="">Select Status</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="weekly_study_hours"><i class="fas fa-clock"></i> Weekly Study Hours</label>
+                            <input type="number" id="weekly_study_hours" name="weekly_study_hours" min="0" max="168" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="lms_logins_per_week"><i class="fas fa-laptop"></i> LMS Logins/Week</label>
+                            <input type="number" id="lms_logins_per_week" name="lms_logins_per_week" min="0" max="50" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="video_watched_pct"><i class="fas fa-video"></i> Video Watched %</label>
+                            <input type="number" id="video_watched_pct" name="video_watched_pct" step="0.01" min="0" max="100" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="forum_posts"><i class="fas fa-comments"></i> Forum Posts</label>
+                            <input type="number" id="forum_posts" name="forum_posts" min="0" max="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="assignment_ontime_pct"><i class="fas fa-tasks"></i> Assignment On-time %</label>
+                            <input type="number" id="assignment_ontime_pct" name="assignment_ontime_pct" step="0.01" min="0" max="100" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="quiz_avg"><i class="fas fa-question-circle"></i> Quiz Average</label>
+                            <input type="number" id="quiz_avg" name="quiz_avg" step="0.01" min="0" max="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="midterm_grade"><i class="fas fa-percentage"></i> Midterm Grade</label>
+                            <input type="number" id="midterm_grade" name="midterm_grade" step="0.01" min="0" max="100" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="predict-btn">
+                        <i class="fas fa-magic"></i> Predict Advising Action
+                    </button>
+                </form>
+
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+
+            <div class="result-container">
+                <div class="result-placeholder" id="resultPlaceholder">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>Prediction Results</h3>
+                    <p>Fill out the student information form and click "Predict" to see the recommended advising action.</p>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing student data...</p>
+                </div>
+
+                <div class="result-content" id="resultContent">
+                    <h3><i class="fas fa-bullhorn"></i> Recommended Action</h3>
+                    <div class="result-action" id="resultAction"></div>
+
+                    <div class="result-details">
+                        <p><strong>Student ID:</strong> <span id="resultStudentId"></span></p>
+                        <p><strong>Confidence Level:</strong> <span id="resultConfidence"></span>%</p>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidenceFill"></div>
+                        </div>
+                        <p><strong>Analysis Time:</strong> <span id="resultTimestamp"></span></p>
+                    </div>
+
+                    <button class="predict-btn" onclick="resetForm()" style="margin-top: 20px;">
+                        <i class="fas fa-redo"></i> Analyze Another Student
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('studentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Show loading
+            document.getElementById('resultPlaceholder').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultContent').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+
+            // Get form data
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Hide loading
+                    document.getElementById('loading').style.display = 'none';
+
+                    // Show results
+                    displayResult(result);
+                } else {
+                    throw new Error(result.error || 'Prediction failed');
+                }
+
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('resultPlaceholder').style.display = 'block';
+                document.getElementById('errorMessage').textContent = 'Error: ' + error.message;
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        });
+
+        function displayResult(result) {
+            document.getElementById('resultStudentId').textContent = result.student_id;
+            document.getElementById('resultConfidence').textContent = result.confidence;
+            document.getElementById('resultTimestamp').textContent = result.timestamp;
+
+            const actionElement = document.getElementById('resultAction');
+            actionElement.textContent = result.predicted_action;
+
+            // Remove existing action classes
+            actionElement.className = 'result-action';
+
+            // Add appropriate class based on action
+            const action = result.predicted_action.toLowerCase();
+            if (action.includes('mandatory')) {
+                actionElement.classList.add('action-mandatory');
+            } else if (action.includes('recommend')) {
+                actionElement.classList.add('action-recommend');
+            } else if (action.includes('monitor')) {
+                actionElement.classList.add('action-monitor');
+            } else if (action.includes('wellness')) {
+                actionElement.classList.add('action-wellness');
+            } else if (action.includes('check')) {
+                actionElement.classList.add('action-check');
+            } else if (action.includes('no_action')) {
+                actionElement.classList.add('action-no');
+            }
+
+            // Update confidence bar
+            document.getElementById('confidenceFill').style.width = result.confidence + '%';
+
+            // Show result content
+            document.getElementById('resultContent').style.display = 'block';
+        }
+
+        function resetForm() {
+            document.getElementById('studentForm').reset();
+            document.getElementById('resultContent').style.display = 'none';
+            document.getElementById('resultPlaceholder').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Add some sample data for testing
+        function fillSampleData() {
+            document.getElementById('student_id').value = '2024';
+            document.getElementById('age').value = '20';
+            document.getElementById('major').value = 'CompSci';
+            document.getElementById('previous_gpa').value = '3.2';
+            document.getElementById('scholarship').value = 'true';
+            document.getElementById('weekly_study_hours').value = '15';
+            document.getElementById('lms_logins_per_week').value = '8';
+            document.getElementById('video_watched_pct').value = '85.5';
+            document.getElementById('forum_posts').value = '3';
+            document.getElementById('assignment_ontime_pct').value = '92.0';
+            document.getElementById('quiz_avg').value = '78.5';
+            document.getElementById('midterm_grade').value = '84.2';
+        }
+
+        // Add sample data button (for testing)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            const sampleBtn = document.createElement('button');
+            sampleBtn.textContent = '🧪 Fill Sample Data';
+            sampleBtn.onclick = fillSampleData;
+            sampleBtn.style.cssText = 'position:fixed;top:10px;right:10px;padding:10px;background:#4CAF50;color:white;border:none;border-radius:5px;cursor:pointer;z-index:1000;';
+            document.body.appendChild(sampleBtn);
+        }
+    </script>
+</body>
+</html>
